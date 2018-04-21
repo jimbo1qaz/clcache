@@ -25,6 +25,7 @@ import sys
 import threading
 from tempfile import TemporaryFile
 from typing import Any, List, Tuple, Iterator
+from pathlib import Path
 
 VERSION = "4.1.0-dev"
 
@@ -992,12 +993,12 @@ def copyOrLink(srcFilePath, dstFilePath):
     os.replace(tempDst, dstFilePath)
 
 
-def myExecutablePath():
+def myExecutablePath() -> Path:
     assert hasattr(sys, "frozen"), "is not frozen by py2exe"
-    return sys.executable.upper()
+    return Path(sys.executable).resolve()
 
 
-def findCompilerBinary():
+def findCompilerBinary() -> str:
     if "CLCACHE_CL" in os.environ:
         path = os.environ["CLCACHE_CL"]
         if os.path.basename(path) == path:
@@ -1008,14 +1009,14 @@ def findCompilerBinary():
     frozenByPy2Exe = hasattr(sys, "frozen")
 
     for p in os.environ["PATH"].split(os.pathsep):
-        path = os.path.join(p, "cl.exe")
-        if os.path.exists(path):
+        path = Path(p, "cl.exe").resolve()
+        if path.exists():
             if not frozenByPy2Exe:
-                return path
+                return str(path)
 
             # Guard against recursively calling ourselves
-            if path.upper() != myExecutablePath():
-                return path
+            if path != myExecutablePath():
+                return str(path)
     return None
 
 
